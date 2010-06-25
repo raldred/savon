@@ -222,7 +222,15 @@ module Savon
     # (values). Defaults to a Hash containing an +xmlns:env+ key and the namespace for the current
     # SOAP version.
     def namespaces
-      @namespaces ||= { "xmlns:env" => Namespace[version] }
+      @namespaces ||= { "xmlns:#{env_namespace_name}" => Namespace[version] }
+    end
+    
+    # Allow setting of the name of the 'xmlns:env' namespace
+    attr_writer :env_namespace_name
+    
+    # returns the namespace name
+    def env_namespace_name
+      @env_namespace_name ||= 'env'
     end
 
     # Convenience method for setting the +xmlns:wsdl+ namespace.
@@ -244,8 +252,8 @@ module Savon
     def to_xml
       unless @xml
         @builder.instruct!
-        @xml = @builder.env :Envelope, merged_namespaces do |xml|
-          xml.env(:Header) { xml << merged_header } unless merged_header.empty?
+        @xml = @builder.tag!(env_namespace_name.to_sym, :Envelope, merged_namespaces) do |xml|
+          xml.tag!(env_namespace_name.to_sym, :Header) { xml << merged_header } unless merged_header.empty?
           xml_body xml
         end
       end
@@ -273,7 +281,7 @@ module Savon
 
     # Adds a SOAP XML body to a given +xml+ Object.
     def xml_body(xml)
-      xml.env(:Body) do
+      xml.tag!(env_namespace_name.to_sym, :Body) do
         xml.tag!(:wsdl, *input_array) { xml << (@body.to_soap_xml rescue @body.to_s) }
       end
     end

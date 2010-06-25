@@ -197,6 +197,37 @@ describe Savon::SOAP do
         '</env:Envelope>'
       )
     end
+    
+    it "should accept a custom env namespace name" do
+      expect do
+        @soap.env_namespace_name = 'soap'
+      end.to_not raise_error
+    end
+    
+    context "with a custom env namespace name" do
+      
+      before(:each) do
+        @soap.env_namespace_name = 'soap'
+      end
+      
+      it "should contain the custom envelope namespace" do
+        Savon::SOAP::Namespace = { 1 => 'http://example.com' }
+        @soap.to_xml.should include("<soap:Envelope xmlns:soap=\"http://example.com\"")
+      end
+      
+      it "should contain the custom body namespace" do
+        @soap.to_xml.should include("<soap:Body")
+      end
+      
+      context "and a custom header string" do
+        
+        it "should contain the custom header namespace" do
+          @soap.header = '<key>value</key>'
+          @soap.to_xml.should include("<soap:Header><key>value</key></soap:Header>")
+        end
+        
+      end
+    end
   end
 end
 
